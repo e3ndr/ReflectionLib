@@ -8,8 +8,32 @@ import xyz.e3ndr.reflectionlib.helpers.AccessHelper;
 
 public class ReflectionLib {
 
+    public static Field deepFieldSearch(Class<?> clazz, String fieldName) {
+        if (clazz == null) {
+            throw new IllegalArgumentException("Cannot find field: " + fieldName);
+        } else {
+            try {
+                return clazz.getDeclaredField(fieldName);
+            } catch (NoSuchFieldException ignored) {
+                return deepFieldSearch(clazz.getSuperclass(), fieldName);
+            }
+        }
+    }
+
+    public static Method deepMethodSearch(Class<?> clazz, String methodName, Class<?>[] parameters) {
+        if (clazz == null) {
+            throw new IllegalArgumentException("Cannot find field: " + methodName);
+        } else {
+            try {
+                return clazz.getDeclaredMethod(methodName, parameters);
+            } catch (NoSuchMethodException e) {
+                return deepMethodSearch(clazz.getSuperclass(), methodName, parameters);
+            }
+        }
+    }
+
     public static void setValue(Object instance, String fieldName, Object value) throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
-        Field field = instance.getClass().getDeclaredField(fieldName);
+        Field field = deepFieldSearch(instance.getClass(), fieldName);
 
         AccessHelper.makeAccessible(field);
 
@@ -17,7 +41,7 @@ public class ReflectionLib {
     }
 
     public static void setStaticValue(Class<?> clazz, String fieldName, Object value) throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
-        Field field = clazz.getDeclaredField(fieldName);
+        Field field = deepFieldSearch(clazz, fieldName);
 
         AccessHelper.makeAccessible(field);
 
@@ -26,7 +50,7 @@ public class ReflectionLib {
 
     @SuppressWarnings("unchecked")
     public static <T> T getValue(Object instance, String fieldName) throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
-        Field field = instance.getClass().getDeclaredField(fieldName);
+        Field field = deepFieldSearch(instance.getClass(), fieldName);
 
         AccessHelper.makeAccessible(field);
 
@@ -35,7 +59,7 @@ public class ReflectionLib {
 
     @SuppressWarnings("unchecked")
     public static <T> T getStaticValue(Class<?> clazz, String fieldName) throws NoSuchFieldException, SecurityException, IllegalArgumentException, IllegalAccessException {
-        Field field = clazz.getDeclaredField(fieldName);
+        Field field = deepFieldSearch(clazz, fieldName);
 
         AccessHelper.makeAccessible(field);
 
@@ -50,7 +74,7 @@ public class ReflectionLib {
             parameters[i] = args[i].getClass();
         }
 
-        Method method = instance.getClass().getDeclaredMethod(methodName, parameters);
+        Method method = deepMethodSearch(instance.getClass(), methodName, parameters);
 
         AccessHelper.makeAccessible(method);
 
@@ -65,7 +89,7 @@ public class ReflectionLib {
             parameters[i] = args[i].getClass();
         }
 
-        Method method = clazz.getDeclaredMethod(methodName, parameters);
+        Method method = deepMethodSearch(clazz, methodName, parameters);
 
         AccessHelper.makeAccessible(method);
 
